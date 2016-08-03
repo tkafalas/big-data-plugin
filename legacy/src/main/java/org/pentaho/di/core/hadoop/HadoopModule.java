@@ -9,7 +9,7 @@ public class HadoopModule {
   private HadoopConfiguration hadoopConfiguration;
 
   public HadoopModule( NamedCluster namedCluster, HadoopModule.HadoopModuleType hadoopModuleType,
-      HadoopConfiguration hadoopConfiguration ) {
+                       HadoopConfiguration hadoopConfiguration ) {
     this.namedCluster = namedCluster;
     this.hadoopModuleType = hadoopModuleType;
     this.hadoopConfiguration = hadoopConfiguration;
@@ -23,8 +23,12 @@ public class HadoopModule {
     return hadoopModuleType;
   }
 
+  public HadoopConfiguration getHadoopConfiguration() {
+    return hadoopConfiguration;
+  }
+
   public enum HadoopModuleType {
     HIVE, HBASE, IMPALA, CLOUDERA_IMPALA, PMR
   }
-  
+
 }
