@@ -99,35 +99,35 @@ public class ParquetOutputMetaInjectionTest extends BaseMetadataInjectionTest<Pa
 
     check( "FIELD_NAME", new StringGetter() {
       public String get() {
-        return meta.getOutputFields()[ 0 ].getName();
+        return meta.getOutputFields().get(0).getPentahoFieldName();
       }
     } );
 
     String[] typeNames = ValueMetaBase.getAllTypes();
     checkStringToInt( "FIELD_TYPE", new IntGetter() {
       public int get() {
-        return meta.getOutputFields()[ 0 ].getType();
+        return meta.getOutputFields().get(0).getFormatType();
       }
     }, typeNames, getTypeCodes( typeNames ) );
 
     check( "FIELD_PATH", new StringGetter() {
       public String get() {
-        return meta.getOutputFields()[ 0 ].getPath();
+        return meta.getOutputFields().get(0).getFormatFieldName();
       }
     } );
     check( "FIELD_IF_NULL", new StringGetter() {
       public String get() {
-        return meta.getOutputFields()[ 0 ].getIfNullValue();
+        return meta.getOutputFields().get(0).getDefaultValue();
       }
     } );
     check( "FIELD_NULLABLE", new BooleanGetter() {
       public boolean get() {
-        return meta.getOutputFields()[ 0 ].isNullable();
+        return meta.getOutputFields().get(0).getAllowNull();
       }
     } );
     checkStringToInt( "FIELD_SOURCE_TYPE", new IntGetter() {
       public int get() {
-        return meta.getOutputFields()[ 0 ].getSourceType();
+        return meta.getOutputFields().get(0).getPentahoType();
       }
     }, typeNames, getTypeCodes( typeNames ) );
 
