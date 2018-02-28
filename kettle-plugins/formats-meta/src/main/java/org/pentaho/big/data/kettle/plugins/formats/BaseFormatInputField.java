@@ -39,6 +39,8 @@ public class BaseFormatInputField implements IFormatInputField {
   private String pentahoFieldName = null;
   private int pentahoType;
   private int formatType;
+  private int precision = 0;
+  private int scale = 0;
 
   @Override
   public String getFormatFieldName() {
@@ -76,6 +78,22 @@ public class BaseFormatInputField implements IFormatInputField {
 
   @Override public void setFormatType( int formatType ) {
     this.formatType = formatType;
+  }
+
+  @Override public int getPrecision() {
+    return this.precision;
+  }
+
+  @Override public void setPrecision( int precision ) {
+    this.precision = precision;
+  }
+
+  @Override public int getScale() {
+    return scale;
+  }
+
+  @Override public void setScale( int scale ) {
+    this.scale = scale;
   }
 
   @Injection( name = "FIELD_TYPE", group = "FIELDS" )

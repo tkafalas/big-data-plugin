@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2017 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2018 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -29,6 +29,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -108,7 +110,7 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
     ParquetSpec.DataType.DECIMAL.getName(),
     ParquetSpec.DataType.DATE.getName(),
     ParquetSpec.DataType.TIMESTAMP_MILLIS.getName(),
-    ParquetSpec.DataType.BYTE_ARRAY.getName()
+    ParquetSpec.DataType.BINARY.getName()
   };
 
 
@@ -119,6 +121,29 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
   public ParquetOutputDialog( Shell parent, ParquetOutputMeta parquetOutputMeta, TransMeta transMeta, String sname ) {
     super( parent, parquetOutputMeta, transMeta, sname );
     this.meta = parquetOutputMeta;
+  }
+
+  protected void createUI(  ) {
+    Control prev = createHeader();
+
+    //main fields
+    prev = addFileWidgets( prev );
+
+    createFooter( shell );
+
+    Composite afterFile = new Composite( shell, SWT.NONE );
+    afterFile.setLayout( new FormLayout() );
+    Label separator = new Label( shell, SWT.HORIZONTAL | SWT.SEPARATOR );
+    FormData fdSpacer = new FormData();
+    fdSpacer.height = 2;
+    fdSpacer.left = new FormAttachment( 0, 0 );
+    fdSpacer.bottom = new FormAttachment( wCancel, -MARGIN );
+    fdSpacer.right = new FormAttachment( 100, 0 );
+    separator.setLayoutData( fdSpacer );
+
+    new FD( afterFile ).left( 0, 0 ).top( prev, 0 ).right( 100, 0 ).bottom( separator, -MARGIN ).apply();
+
+    createAfterFile( afterFile );
   }
 
   protected Control createAfterFile( Composite afterFile ) {

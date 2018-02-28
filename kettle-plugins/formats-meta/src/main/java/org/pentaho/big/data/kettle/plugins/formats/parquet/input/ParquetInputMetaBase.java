@@ -2,7 +2,7 @@
  *
  * Pentaho Data Integration
  *
- * Copyright (C) 2017 by Hitachi Vantara : http://www.pentaho.com
+ * Copyright (C) 2018 by Hitachi Vantara : http://www.pentaho.com
  *
  *******************************************************************************
  *
@@ -22,8 +22,8 @@
 
 package org.pentaho.big.data.kettle.plugins.formats.parquet.input;
 
+import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.vfs2.FileObject;
 import org.pentaho.big.data.kettle.plugins.formats.FormatInputOutputField;
 import org.pentaho.big.data.kettle.plugins.formats.FormatInputFile;
@@ -32,8 +32,8 @@ import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleFileException;
 import org.pentaho.di.core.exception.KettleXMLException;
+import org.pentaho.di.core.row.value.ValueMetaBase;
 import org.pentaho.di.core.row.value.ValueMetaFactory;
-import org.pentaho.di.core.row.value.ValueMetaString;
 import org.pentaho.di.core.vfs.AliasedFileObject;
 import org.pentaho.di.core.vfs.KettleVFS;
 import org.pentaho.di.core.xml.XMLHandler;
@@ -51,19 +51,42 @@ import org.w3c.dom.Node;
  * @author <alexander_buloichik@epam.com>
  */
 public abstract class ParquetInputMetaBase extends
-    BaseFileInputMeta<BaseFileInputAdditionalField, FormatInputFile, FormatInputOutputField> implements
-  ResolvableResource {
+    BaseFileInputMeta<BaseFileInputAdditionalField, FormatInputFile, FormatInputOutputField> implements ResolvableResource {
+
+  protected List<ParquetInputField> inputFields;
 
   public ParquetInputMetaBase() {
     additionalOutputFields = new BaseFileInputAdditionalField();
     inputFiles = new FormatInputFile();
-    inputFields = new FormatInputOutputField[0];
+    inputFields = new ArrayList<>(  );
+  }
+
+  public String getFilename() {
+    if ( inputFiles != null && inputFiles.fileName != null
+      && inputFiles.fileName.length > 0 ) {
+      return inputFiles.fileName[0];
+    } else {
+      return null;
+    }
+  }
+
+  public void setFilename( String filename ) {
+    inputFiles.fileName[0] = filename;
+  }
+
+  public List<ParquetInputField> getInputFields() {
+    return inputFields;
+  }
+
+  public void setInputFields( List<ParquetInputField> inputFields ) {
+    this.inputFields = inputFields;
   }
 
   @Override
   public String getXML() {
     StringBuilder retval = new StringBuilder( 1500 );
 
+    retval.append( "    " ).append( XMLHandler.addTagValue( "passing_through_fields", inputFiles.passingThruFields ) );
     retval.append( "    <file>" ).append( Const.CR );
     for ( int i = 0; i < inputFiles.fileName.length; i++ ) {
       retval.append( "      " ).append( XMLHandler.addTagValue( "environment", inputFiles.environment[i] ) );
@@ -82,23 +105,15 @@ public abstract class ParquetInputMetaBase extends
     retval.append( "    </file>" ).append( Const.CR );
 
     retval.append( "    <fields>" ).append( Const.CR );
-    for ( int i = 0; i < inputFields.length; i++ ) {
-      FormatInputOutputField field = inputFields[i];
+    for ( int i = 0; i < inputFields.size(); i++ ) {
+      ParquetInputField field = inputFields.get( i );
       retval.append( "      <field>" ).append( Const.CR );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "path", field.getPath() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "name", field.getName() ) );
+      retval.append( "        " ).append( XMLHandler.addTagValue( "path", field.getFormatFieldName() ) );
+      retval.append( "        " ).append( XMLHandler.addTagValue( "name", field.getPentahoFieldName() ) );
       retval.append( "        " ).append( XMLHandler.addTagValue( "type", field.getTypeDesc() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "format", field.getFormat() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "currency", field.getCurrencySymbol() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "decimal", field.getDecimalSymbol() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "group", field.getGroupSymbol() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "nullif", field.getNullString() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "ifnull", field.getIfNullValue() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "position", field.getPosition() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "length", field.getLength() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "precision", field.getPrecision() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "trim_type", field.getTrimTypeCode() ) );
-      retval.append( "        " ).append( XMLHandler.addTagValue( "repeat", field.isRepeated() ) );
+      if ( field.getParquetType() != null ) {
+        retval.append( "        " ).append( XMLHandler.addTagValue( "parquet_type", field.getParquetType().getName() ) );
+      }
       retval.append( "      </field>" ).append( Const.CR );
     }
     retval.append( "    </fields>" ).append( Const.CR );
@@ -110,6 +125,7 @@ public abstract class ParquetInputMetaBase extends
   public void saveRep( Repository rep, IMetaStore metaStore, ObjectId id_transformation, ObjectId id_step )
     throws KettleException {
     try {
+      rep.saveStepAttribute( id_transformation, id_step, "passing_through_fields", inputFiles.passingThruFields );
       for ( int i = 0; i < inputFiles.fileName.length; i++ ) {
         rep.saveStepAttribute( id_transformation, id_step, i, "environment", inputFiles.environment[i] );
         rep.saveStepAttribute( id_transformation, id_step, i, "file_name", inputFiles.fileName[i] );
@@ -119,23 +135,15 @@ public abstract class ParquetInputMetaBase extends
         rep.saveStepAttribute( id_transformation, id_step, i, "include_subfolders", inputFiles.includeSubFolders[i] );
       }
 
-      for ( int i = 0; i < inputFields.length; i++ ) {
-        FormatInputOutputField field = inputFields[i];
+      for ( int i = 0; i < inputFields.size(); i++ ) {
+        ParquetInputField field = inputFields.get( i );
 
-        rep.saveStepAttribute( id_transformation, id_step, i, "path", field.getPath() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_name", field.getName() );
+        rep.saveStepAttribute( id_transformation, id_step, i, "path", field.getFormatFieldName() );
+        rep.saveStepAttribute( id_transformation, id_step, i, "field_name", field.getPentahoFieldName() );
         rep.saveStepAttribute( id_transformation, id_step, i, "field_type", field.getTypeDesc() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_format", field.getFormat() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_currency", field.getCurrencySymbol() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_decimal", field.getDecimalSymbol() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_group", field.getGroupSymbol() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_nullif", field.getNullString() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_ifnull", field.getIfNullValue() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_position", field.getPosition() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_length", field.getLength() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_precision", field.getPrecision() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_trim_type", field.getTrimTypeCode() );
-        rep.saveStepAttribute( id_transformation, id_step, i, "field_repeat", field.isRepeated() );
+        if ( field.getParquetType() != null  ) {
+          rep.saveStepAttribute( id_transformation, id_step, i, "parquet_type", field.getParquetType().getName() );
+        }
       }
     } catch ( Exception e ) {
       throw new KettleException( "Unable to save step information to the repository for id_step=" + id_step, e );
@@ -149,7 +157,10 @@ public abstract class ParquetInputMetaBase extends
     int nrfiles = XMLHandler.countNodes( filenode, "name" );
     int nrfields = XMLHandler.countNodes( fields, "field" );
 
+    String passThroughFields = XMLHandler.getTagValue( stepnode, "passing_through_fields" ) == null ? "false"
+            : XMLHandler.getTagValue( stepnode, "passing_through_fields" );
     allocateFiles( nrfiles );
+    inputFiles.passingThruFields = ValueMetaBase.convertStringToBoolean( passThroughFields );
     for ( int i = 0; i < nrfiles; i++ ) {
       Node envnode = XMLHandler.getSubNodeByNr( filenode, "environment", i );
       Node filenamenode = XMLHandler.getSubNodeByNr( filenode, "name", i );
@@ -165,27 +176,16 @@ public abstract class ParquetInputMetaBase extends
       inputFiles.includeSubFolders[i] = XMLHandler.getNodeValue( includeSubFoldersnode );
     }
 
-    inputFields = new FormatInputOutputField[nrfields];
+    inputFields = new ArrayList<>(  );
     for ( int i = 0; i < nrfields; i++ ) {
       Node fnode = XMLHandler.getSubNodeByNr( fields, "field", i );
-      FormatInputOutputField field = new FormatInputOutputField();
 
-      field.setPath( XMLHandler.getTagValue( fnode, "path" ) );
-      field.setName( XMLHandler.getTagValue( fnode, "name" ) );
-      field.setType( ValueMetaFactory.getIdForValueMeta( XMLHandler.getTagValue( fnode, "type" ) ) );
-      field.setFormat( XMLHandler.getTagValue( fnode, "format" ) );
-      field.setCurrencySymbol( XMLHandler.getTagValue( fnode, "currency" ) );
-      field.setDecimalSymbol( XMLHandler.getTagValue( fnode, "decimal" ) );
-      field.setGroupSymbol( XMLHandler.getTagValue( fnode, "group" ) );
-      field.setNullString( XMLHandler.getTagValue( fnode, "nullif" ) );
-      field.setIfNullValue( XMLHandler.getTagValue( fnode, "ifnull" ) );
-      field.setPosition( Const.toInt( XMLHandler.getTagValue( fnode, "position" ), -1 ) );
-      field.setLength( Const.toInt( XMLHandler.getTagValue( fnode, "length" ), -1 ) );
-      field.setPrecision( Const.toInt( XMLHandler.getTagValue( fnode, "precision" ), -1 ) );
-      field.setTrimType( ValueMetaString.getTrimTypeByCode( XMLHandler.getTagValue( fnode, "trim_type" ) ) );
-      field.setRepeated( YES.equalsIgnoreCase( XMLHandler.getTagValue( fnode, "repeat" ) ) );
-
-      inputFields[i] = field;
+      ParquetInputField field = new ParquetInputField();
+      field.setFormatFieldName( XMLHandler.getTagValue( fnode, "path" ) );
+      field.setPentahoFieldName( XMLHandler.getTagValue( fnode, "name" ) );
+      field.setPentahoType( ValueMetaFactory.getIdForValueMeta( XMLHandler.getTagValue( fnode, "type" ) ) );
+      field.setParquetType( XMLHandler.getTagValue( fnode, "parquet_type" ) );
+      inputFields.add( field );
     }
   }
 
@@ -197,6 +197,7 @@ public abstract class ParquetInputMetaBase extends
 
       allocateFiles( nrfiles );
 
+      inputFiles.passingThruFields = rep.getStepAttributeBoolean( id_step, "passing_through_fields" );
       for ( int i = 0; i < nrfiles; i++ ) {
         inputFiles.environment[i] = rep.getStepAttributeString( id_step, i, "environment" );
         inputFiles.fileName[i] = rep.getStepAttributeString( id_step, i, "file_name" );
@@ -213,27 +214,15 @@ public abstract class ParquetInputMetaBase extends
       }
 
       int nrfields = rep.countNrStepAttributes( id_step, "field_name" );
-      inputFields = new FormatInputOutputField[nrfields];
+      inputFields = new ArrayList<>();
       for ( int i = 0; i < nrfields; i++ ) {
-        FormatInputOutputField field = new FormatInputOutputField();
+        ParquetInputField field = new ParquetInputField();
+        field.setFormatFieldName( rep.getStepAttributeString( id_step, i, "path" ) );
+        field.setPentahoFieldName( rep.getStepAttributeString( id_step, i, "field_name" ) );
+        field.setPentahoType( rep.getStepAttributeString( id_step, i, "field_type" ) );
+        field.setParquetType( rep.getStepAttributeString( id_step, i, "parquet_type" ) );
 
-        field.setPath( rep.getStepAttributeString( id_step, i, "path" ) );
-        field.setName( rep.getStepAttributeString( id_step, i, "field_name" ) );
-        field.setType( ValueMetaFactory.getIdForValueMeta( rep.getStepAttributeString( id_step, i, "field_type" ) ) );
-        field.setFormat( rep.getStepAttributeString( id_step, i, "field_format" ) );
-        field.setCurrencySymbol( rep.getStepAttributeString( id_step, i, "field_currency" ) );
-        field.setDecimalSymbol( rep.getStepAttributeString( id_step, i, "field_decimal" ) );
-        field.setGroupSymbol( rep.getStepAttributeString( id_step, i, "field_group" ) );
-        field.setNullString( rep.getStepAttributeString( id_step, i, "field_nullif" ) );
-        field.setIfNullValue( rep.getStepAttributeString( id_step, i, "field_ifnull" ) );
-        field.setPosition( (int) rep.getStepAttributeInteger( id_step, i, "field_position" ) );
-        field.setLength( (int) rep.getStepAttributeInteger( id_step, i, "field_length" ) );
-        field.setPrecision( (int) rep.getStepAttributeInteger( id_step, i, "field_precision" ) );
-        field.setTrimType( ValueMetaString.getTrimTypeByCode( rep.getStepAttributeString( id_step, i,
-            "field_trim_type" ) ) );
-        field.setRepeated( rep.getStepAttributeBoolean( id_step, i, "field_repeat" ) );
-
-        inputFields[i] = field;
+        inputFields.add( field );
       }
 
     } catch ( Exception e ) {
@@ -261,7 +250,7 @@ public abstract class ParquetInputMetaBase extends
   @Override
   public void setDefault() {
     allocateFiles( 0 );
-    inputFields = new FormatInputOutputField[0];
+    inputFields = new ArrayList<>();
   }
 
   @Override

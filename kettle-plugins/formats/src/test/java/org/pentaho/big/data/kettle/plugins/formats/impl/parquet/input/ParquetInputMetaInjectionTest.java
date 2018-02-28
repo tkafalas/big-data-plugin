@@ -52,27 +52,29 @@ public class ParquetInputMetaInjectionTest extends BaseMetadataInjectionTest<Par
 
     check( "FIELD_NAME", new StringGetter() {
       public String get() {
-        return meta.inputFields[ 0 ].getName();
+        return meta.getInputFields().get( 0 ).getPentahoFieldName();
       }
     } );
 
     String[] typeNames = ValueMetaBase.getAllTypes();
     checkStringToInt( "FIELD_TYPE", new IntGetter() {
       public int get() {
-        return meta.inputFields[ 0 ].getType();
+        return meta.getInputFields().get( 0 ).getPentahoType();
       }
     }, typeNames, getTypeCodes( typeNames ) );
 
     check( "FIELD_PATH", new StringGetter() {
       public String get() {
-        return meta.inputFields[ 0 ].getPath();
+        return meta.getInputFields().get( 0 ).getFormatFieldName();
       }
     } );
 
+    /*
     checkStringToInt( "FIELD_SOURCE_TYPE", new IntGetter() {
       public int get() {
         return meta.inputFields[ 0 ].getSourceType();
       }
     }, typeNames, getTypeCodes( typeNames ) );
+    */
   }
 }

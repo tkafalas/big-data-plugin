@@ -375,7 +375,7 @@ public abstract class ParquetOutputMetaBase extends BaseStepMeta implements Step
       case ValueMetaInterface.TYPE_TIMESTAMP:
         return ParquetSpec.DataType.TIMESTAMP_MILLIS.getName();
       case ValueMetaInterface.TYPE_BINARY:
-        return ParquetSpec.DataType.BYTE_ARRAY.getName();
+        return ParquetSpec.DataType.BINARY.getName();
       case ValueMetaInterface.TYPE_BIGNUMBER:
         return ParquetSpec.DataType.DECIMAL.getName();
       case ValueMetaInterface.TYPE_BOOLEAN:
