@@ -100,17 +100,17 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
   private Button wSpecifyDateTimeFormat;
   private ComboVar wDateTimeFormat;
 
-  private static final String[] SUPPORTED_PARQUET_TYPE_NAMES = {
-    ParquetSpec.DataType.UTF8.getName(),
-    ParquetSpec.DataType.INT_32.getName(),
-    ParquetSpec.DataType.INT_64.getName(),
-    ParquetSpec.DataType.FLOAT.getName(),
-    ParquetSpec.DataType.DOUBLE.getName(),
-    ParquetSpec.DataType.BOOLEAN.getName(),
-    ParquetSpec.DataType.DECIMAL.getName(),
-    ParquetSpec.DataType.DATE.getName(),
-    ParquetSpec.DataType.TIMESTAMP_MILLIS.getName(),
-    ParquetSpec.DataType.BINARY.getName()
+  private static final ParquetSpec.DataType[] SUPPORTED_PARQUET_TYPES = {
+    ParquetSpec.DataType.UTF8,
+    ParquetSpec.DataType.INT_32,
+    ParquetSpec.DataType.INT_64,
+    ParquetSpec.DataType.FLOAT,
+    ParquetSpec.DataType.DOUBLE,
+    ParquetSpec.DataType.BOOLEAN,
+    ParquetSpec.DataType.DECIMAL,
+    ParquetSpec.DataType.DATE,
+    ParquetSpec.DataType.TIMESTAMP_MILLIS,
+    ParquetSpec.DataType.BINARY
   };
 
 
@@ -199,13 +199,17 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
 
     wGetFields.addListener( SWT.Selection, lsGet );
 
+    String[] typeNames = new String[ SUPPORTED_PARQUET_TYPES.length ];
+    for ( int i = 0; i < typeNames.length; i++ ) {
+      typeNames[ i ] = SUPPORTED_PARQUET_TYPES[ i ].getName();
+    }
     ColumnInfo[] parameterColumns = new ColumnInfo[] {
       new ColumnInfo( BaseMessages.getString( PKG, "ParquetOutputDialog.Fields.column.Path" ),
           ColumnInfo.COLUMN_TYPE_TEXT, false, false ),
       new ColumnInfo( BaseMessages.getString( PKG, "ParquetOutputDialog.Fields.column.Name" ),
           ColumnInfo.COLUMN_TYPE_TEXT, false, false ),
       new ColumnInfo( BaseMessages.getString( PKG, "ParquetOutputDialog.Fields.column.Type" ),
-          ColumnInfo.COLUMN_TYPE_CCOMBO,  SUPPORTED_PARQUET_TYPE_NAMES, false ),
+          ColumnInfo.COLUMN_TYPE_CCOMBO,  typeNames, false ),
       new ColumnInfo( BaseMessages.getString( PKG, "ParquetOutputDialog.Fields.column.Precision" ),
           ColumnInfo.COLUMN_TYPE_TEXT, false, false ),
       new ColumnInfo( BaseMessages.getString( PKG, "ParquetOutputDialog.Fields.column.Scale" ),
@@ -462,7 +466,12 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
       ParquetOutputField field = new ParquetOutputField();
       field.setFormatFieldName( item.getText( j++ ) );
       field.setPentahoFieldName( item.getText( j++ ) );
-      field.setFormatType( item.getText( j++ ) );
+      String typeName = item.getText( j++ );
+      for ( ParquetSpec.DataType parqueType : SUPPORTED_PARQUET_TYPES ) {
+        if ( parqueType.getName().equals( typeName ) ) {
+          field.setFormatType( parqueType.getId() );
+        }
+      }
       if ( field.getParquetType().equals( ParquetSpec.DataType.DECIMAL ) ) {
         field.setPrecision( item.getText( j++ ) );
         field.setScale( item.getText( j++ ) );
@@ -482,6 +491,13 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
       item.setText( i++, coalesce( field.getFormatFieldName() ) );
       item.setText( i++, coalesce( field.getPentahoFieldName() ) );
       item.setText( i++, coalesce( field.getParquetType().getName() ) );
+      if ( field.getParquetType().equals( ParquetSpec.DataType.DECIMAL ) ) {
+        item.setText( i++, Integer.toString( field.getPrecision() ) );
+        item.setText( i++, Integer.toString( field.getScale() ) );
+      } else {
+        item.setText( i++, "" );
+        item.setText( i++, "" );
+      }
       item.setText( i++, coalesce( field.getDefaultValue() ) );
       item.setText( i++, field.getAllowNull() ? NullableValuesEnum.YES.getValue() : NullableValuesEnum.NO.getValue() );
     } );
@@ -592,6 +608,7 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
       tableView.optWidth( true );
     }
   }
+
   protected void getFields() {
     try {
       RowMetaInterface r = transMeta.getPrevStepFields( stepname );
@@ -607,8 +624,8 @@ public class ParquetOutputDialog extends BaseParquetStepDialog<ParquetOutputMeta
         // fix empty null fields to nullable
         for ( int i = 0; i < wOutputFields.table.getItemCount(); i++ ) {
           TableItem tableItem = wOutputFields.table.getItem( i );
-          if ( StringUtils.isEmpty( tableItem.getText( 5 ) ) ) {
-            tableItem.setText( 5, "Yes" );
+          if ( StringUtils.isEmpty( tableItem.getText( 7 ) ) ) {
+            tableItem.setText( 7, "Yes" );
           }
         }
 

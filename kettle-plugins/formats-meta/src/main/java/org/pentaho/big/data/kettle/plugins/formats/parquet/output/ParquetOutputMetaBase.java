@@ -198,6 +198,8 @@ public abstract class ParquetOutputMetaBase extends BaseStepMeta implements Step
         outputField.setFormatFieldName( XMLHandler.getTagValue( fnode, "path" ) );
         outputField.setPentahoFieldName( XMLHandler.getTagValue( fnode, "name" ) );
         outputField.setFormatType( Integer.parseInt( XMLHandler.getTagValue( fnode, "type" ) ) );
+        outputField.setPrecision( XMLHandler.getTagValue( fnode, "precision" ) );
+        outputField.setScale( XMLHandler.getTagValue( fnode, "scale" ) );
         outputField.setAllowNull( "Y".equalsIgnoreCase( XMLHandler.getTagValue( fnode, "nullable" ) ) );
         outputField.setDefaultValue( XMLHandler.getTagValue( fnode, "default" ) );
         parquetOutputFields.add( outputField );
@@ -238,6 +240,8 @@ public abstract class ParquetOutputMetaBase extends BaseStepMeta implements Step
         retval.append( "        " ).append( XMLHandler.addTagValue( "path", field.getFormatFieldName() ) );
         retval.append( "        " ).append( XMLHandler.addTagValue( "name", field.getPentahoFieldName() ) );
         retval.append( "        " ).append( XMLHandler.addTagValue( "type", field.getFormatType() ) );
+        retval.append( "        " ).append( XMLHandler.addTagValue( "precision", field.getPrecision() ) );
+        retval.append( "        " ).append( XMLHandler.addTagValue( "scale", field.getScale() ) );
         retval.append( "        " ).append( XMLHandler.addTagValue( "nullable", field.getAllowNull() ) );
         retval.append( "        " ).append( XMLHandler.addTagValue( "default", field.getDefaultValue() ) );
         retval.append( "      </field>" ).append( Const.CR );
@@ -275,6 +279,8 @@ public abstract class ParquetOutputMetaBase extends BaseStepMeta implements Step
         outputField.setFormatFieldName( rep.getStepAttributeString( id_step, i, "path" ) );
         outputField.setPentahoFieldName( rep.getStepAttributeString( id_step, i, "name" ) );
         outputField.setFormatType( (int) rep.getStepAttributeInteger( id_step, i, "type" ) );
+        outputField.setPrecision( rep.getStepAttributeString( id_step, i, "precision" ) );
+        outputField.setScale( rep.getStepAttributeString( id_step, i, "scale" ) );
         outputField.setAllowNull( rep.getStepAttributeBoolean( id_step, i, "nullable" ) );
         outputField.setDefaultValue( rep.getStepAttributeString( id_step, i, "default" ) );
 
@@ -309,6 +315,8 @@ public abstract class ParquetOutputMetaBase extends BaseStepMeta implements Step
         rep.saveStepAttribute( id_transformation, id_step, i, "path", field.getFormatFieldName() );
         rep.saveStepAttribute( id_transformation, id_step, i, "name", field.getPentahoFieldName() );
         rep.saveStepAttribute( id_transformation, id_step, i, "type", field.getFormatType() );
+        rep.saveStepAttribute( id_transformation, id_step, i, "precision", field.getPrecision() );
+        rep.saveStepAttribute( id_transformation, id_step, i, "scale", field.getScale() );
         rep.saveStepAttribute( id_transformation, id_step, i, "nullable", field.getAllowNull() );
         rep.saveStepAttribute( id_transformation, id_step, i, "default", field.getDefaultValue() );
       }
