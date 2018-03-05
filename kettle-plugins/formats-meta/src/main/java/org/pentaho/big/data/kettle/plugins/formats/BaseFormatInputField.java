@@ -24,6 +24,7 @@ package org.pentaho.big.data.kettle.plugins.formats;
 
 import org.pentaho.di.core.injection.Injection;
 import org.pentaho.di.core.row.value.ValueMetaFactory;
+import org.pentaho.di.trans.steps.file.BaseFileField;
 import org.pentaho.hadoop.shim.api.format.IFormatInputField;
 
 /**
@@ -31,13 +32,10 @@ import org.pentaho.hadoop.shim.api.format.IFormatInputField;
  *
  * @author tkafalas
  */
-public class BaseFormatInputField implements IFormatInputField {
+public class BaseFormatInputField extends BaseFileField implements IFormatInputField {
   @Injection( name = "FIELD_PATH", group = "FIELDS" )
   protected String formatFieldName = null;
 
-  @Injection( name = "FIELD_NAME", group = "FIELDS" )
-  private String pentahoFieldName = null;
-  private int pentahoType;
   private int formatType;
   private int precision = 0;
   private int scale = 0;
@@ -54,22 +52,22 @@ public class BaseFormatInputField implements IFormatInputField {
 
   @Override
   public String getPentahoFieldName() {
-    return pentahoFieldName;
+    return getName();
   }
 
   @Override
   public void setPentahoFieldName( String pentahoFieldName ) {
-    this.pentahoFieldName = pentahoFieldName;
+    setName( pentahoFieldName );
   }
 
   @Override
   public int getPentahoType() {
-    return pentahoType;
+    return getType();
   }
 
   @Override
   public void setPentahoType( int pentahoType ) {
-    this.pentahoType = pentahoType;
+    setType( pentahoType );
   }
 
   @Override public int getFormatType() {
@@ -96,8 +94,7 @@ public class BaseFormatInputField implements IFormatInputField {
     this.scale = scale;
   }
 
-  @Injection( name = "FIELD_TYPE", group = "FIELDS" )
   public void setPentahoType( String value ) {
-    setPentahoType( ValueMetaFactory.getIdForValueMeta( value ) );
+    setType( value );
   }
 }

@@ -94,8 +94,8 @@ public class ParquetInputMeta extends ParquetInputMetaBase {
                          VariableSpace space, Repository repository, IMetaStore metaStore ) throws
     KettleStepException {
     try {
-      for ( int i = 0; i < inputFields.size(); i++ ) {
-        IParquetInputField field = inputFields.get( i );
+      for ( int i = 0; i < inputFields.length; i++ ) {
+        IParquetInputField field = inputFields[ i ];
         String value = space.environmentSubstitute( field.getPentahoFieldName() );
         ValueMetaInterface v = ValueMetaFactory.createValueMeta( value,
           field.getPentahoType() );

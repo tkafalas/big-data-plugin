@@ -172,7 +172,9 @@ public class ParquetInput extends BaseFileInputStep<ParquetInputMeta, ParquetInp
 
   public static List<IParquetInputField> createSchemaFromMeta( ParquetInputMetaBase meta ) {
     List<IParquetInputField> fields = new ArrayList<>(  );
-    meta.getInputFields().forEach( f -> fields.add( f ) );
+    for ( ParquetInputField f : meta.getInputFields() ) {
+      fields.add( f );
+    }
     return fields;
   }
 }

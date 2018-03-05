@@ -266,7 +266,7 @@ public class ParquetInputDialog extends BaseParquetStepDialog<ParquetInputMeta> 
     List<? extends IParquetInputField> actualParquetFileInputFields = getInputFieldsFromParquetFile( true );
 
     int nrFields = wInputFields.nrNonEmpty();
-    meta.setInputFields( new ArrayList<>() );
+    meta.setFields( new ParquetInputField[ nrFields ] );
     for ( int i = 0; i < nrFields; i++ ) {
       TableItem item = wInputFields.getNonEmpty( i );
       ParquetInputField field = new ParquetInputField();
@@ -284,7 +284,7 @@ public class ParquetInputDialog extends BaseParquetStepDialog<ParquetInputMeta> 
       }
       field.setPentahoFieldName( item.getText( FIELD_NAME_COLUMN_INDEX ) );
       field.setPentahoType( ValueMetaFactory.getIdForValueMeta( item.getText( FIELD_TYPE_COLUMN_INDEX ) ) );
-      meta.getInputFields().add( field );
+      meta.inputFields[ i ] = field;
     }
   }
 

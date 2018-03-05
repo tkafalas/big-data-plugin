@@ -25,7 +25,6 @@ package org.pentaho.big.data.kettle.plugins.formats.parquet.input;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.vfs2.FileObject;
-import org.pentaho.big.data.kettle.plugins.formats.FormatInputOutputField;
 import org.pentaho.big.data.kettle.plugins.formats.FormatInputFile;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.database.DatabaseMeta;
@@ -51,14 +50,12 @@ import org.w3c.dom.Node;
  * @author <alexander_buloichik@epam.com>
  */
 public abstract class ParquetInputMetaBase extends
-    BaseFileInputMeta<BaseFileInputAdditionalField, FormatInputFile, FormatInputOutputField> implements ResolvableResource {
-
-  protected List<ParquetInputField> inputFields;
+    BaseFileInputMeta<BaseFileInputAdditionalField, FormatInputFile, ParquetInputField> implements ResolvableResource {
 
   public ParquetInputMetaBase() {
     additionalOutputFields = new BaseFileInputAdditionalField();
     inputFiles = new FormatInputFile();
-    inputFields = new ArrayList<>(  );
+    inputFields = new ParquetInputField[ 0 ];
   }
 
   public String getFilename() {
@@ -74,11 +71,11 @@ public abstract class ParquetInputMetaBase extends
     inputFiles.fileName[0] = filename;
   }
 
-  public List<ParquetInputField> getInputFields() {
+  public ParquetInputField[] getInputFields() {
     return inputFields;
   }
 
-  public void setInputFields( List<ParquetInputField> inputFields ) {
+  public void setFields( ParquetInputField[] inputFields ) {
     this.inputFields = inputFields;
   }
 
@@ -105,8 +102,8 @@ public abstract class ParquetInputMetaBase extends
     retval.append( "    </file>" ).append( Const.CR );
 
     retval.append( "    <fields>" ).append( Const.CR );
-    for ( int i = 0; i < inputFields.size(); i++ ) {
-      ParquetInputField field = inputFields.get( i );
+    for ( int i = 0; i < inputFields.length; i++ ) {
+      ParquetInputField field = inputFields[ i ];
       retval.append( "      <field>" ).append( Const.CR );
       retval.append( "        " ).append( XMLHandler.addTagValue( "path", field.getFormatFieldName() ) );
       retval.append( "        " ).append( XMLHandler.addTagValue( "name", field.getPentahoFieldName() ) );
@@ -135,8 +132,8 @@ public abstract class ParquetInputMetaBase extends
         rep.saveStepAttribute( id_transformation, id_step, i, "include_subfolders", inputFiles.includeSubFolders[i] );
       }
 
-      for ( int i = 0; i < inputFields.size(); i++ ) {
-        ParquetInputField field = inputFields.get( i );
+      for ( int i = 0; i < inputFields.length; i++ ) {
+        ParquetInputField field = inputFields[ i ];
 
         rep.saveStepAttribute( id_transformation, id_step, i, "path", field.getFormatFieldName() );
         rep.saveStepAttribute( id_transformation, id_step, i, "field_name", field.getPentahoFieldName() );
@@ -176,7 +173,7 @@ public abstract class ParquetInputMetaBase extends
       inputFiles.includeSubFolders[i] = XMLHandler.getNodeValue( includeSubFoldersnode );
     }
 
-    inputFields = new ArrayList<>(  );
+    this.inputFields = new ParquetInputField[ nrfields ];
     for ( int i = 0; i < nrfields; i++ ) {
       Node fnode = XMLHandler.getSubNodeByNr( fields, "field", i );
 
@@ -185,7 +182,7 @@ public abstract class ParquetInputMetaBase extends
       field.setPentahoFieldName( XMLHandler.getTagValue( fnode, "name" ) );
       field.setPentahoType( ValueMetaFactory.getIdForValueMeta( XMLHandler.getTagValue( fnode, "type" ) ) );
       field.setParquetType( XMLHandler.getTagValue( fnode, "parquet_type" ) );
-      inputFields.add( field );
+      this.inputFields[ i ] = field;
     }
   }
 
@@ -214,15 +211,14 @@ public abstract class ParquetInputMetaBase extends
       }
 
       int nrfields = rep.countNrStepAttributes( id_step, "field_name" );
-      inputFields = new ArrayList<>();
+      this.inputFields = new ParquetInputField[ nrfields ];
       for ( int i = 0; i < nrfields; i++ ) {
         ParquetInputField field = new ParquetInputField();
         field.setFormatFieldName( rep.getStepAttributeString( id_step, i, "path" ) );
         field.setPentahoFieldName( rep.getStepAttributeString( id_step, i, "field_name" ) );
         field.setPentahoType( rep.getStepAttributeString( id_step, i, "field_type" ) );
         field.setParquetType( rep.getStepAttributeString( id_step, i, "parquet_type" ) );
-
-        inputFields.add( field );
+        this.inputFields[ i ] = field;
       }
 
     } catch ( Exception e ) {
@@ -250,7 +246,7 @@ public abstract class ParquetInputMetaBase extends
   @Override
   public void setDefault() {
     allocateFiles( 0 );
-    inputFields = new ArrayList<>();
+    inputFields = new ParquetInputField[ 0 ];
   }
 
   @Override
