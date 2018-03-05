@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 import org.pentaho.big.data.api.cluster.NamedClusterService;
 import org.pentaho.big.data.api.cluster.service.locator.NamedClusterServiceLocator;
 import org.pentaho.di.core.injection.BaseMetadataInjectionTest;
-import org.pentaho.di.core.row.value.ValueMetaBase;
+import org.pentaho.hadoop.shim.api.format.ParquetSpec;
 
 public class ParquetOutputMetaInjectionTest extends BaseMetadataInjectionTest<ParquetOutputMeta> {
 
@@ -103,12 +103,29 @@ public class ParquetOutputMetaInjectionTest extends BaseMetadataInjectionTest<Pa
       }
     } );
 
-    String[] typeNames = ValueMetaBase.getAllTypes();
+    ParquetSpec.DataType[] supportedParquetTypes = {
+      ParquetSpec.DataType.UTF8,
+      ParquetSpec.DataType.INT_32,
+      ParquetSpec.DataType.INT_64,
+      ParquetSpec.DataType.FLOAT,
+      ParquetSpec.DataType.DOUBLE,
+      ParquetSpec.DataType.BOOLEAN,
+      ParquetSpec.DataType.DECIMAL,
+      ParquetSpec.DataType.DATE,
+      ParquetSpec.DataType.TIMESTAMP_MILLIS,
+      ParquetSpec.DataType.BINARY
+    };
+    String[] typeNames = new String[ supportedParquetTypes.length ];
+    int[] typeIds = new int[ supportedParquetTypes.length ];
+    for ( int i = 0; i < supportedParquetTypes.length; i++) {
+      typeNames[ i ] = supportedParquetTypes[ i ].getName();
+      typeIds[ i ] = supportedParquetTypes[ i ].getId();
+    }
     checkStringToInt( "FIELD_TYPE", new IntGetter() {
       public int get() {
         return meta.getOutputFields().get(0).getFormatType();
       }
-    }, typeNames, getTypeCodes( typeNames ) );
+    }, typeNames, typeIds );
 
     check( "FIELD_PATH", new StringGetter() {
       public String get() {
@@ -125,11 +142,6 @@ public class ParquetOutputMetaInjectionTest extends BaseMetadataInjectionTest<Pa
         return meta.getOutputFields().get(0).getAllowNull();
       }
     } );
-    checkStringToInt( "FIELD_SOURCE_TYPE", new IntGetter() {
-      public int get() {
-        return meta.getOutputFields().get(0).getPentahoType();
-      }
-    }, typeNames, getTypeCodes( typeNames ) );
 
 
     skipPropertyTest( "COMPRESSION" );

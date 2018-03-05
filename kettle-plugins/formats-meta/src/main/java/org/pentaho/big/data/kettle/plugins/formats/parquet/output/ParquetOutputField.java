@@ -28,7 +28,7 @@ public class ParquetOutputField extends BaseFormatOutputField implements IParque
     } catch ( NumberFormatException nfe ) {
       for ( ParquetSpec.DataType parquetType : ParquetSpec.DataType.values() ) {
         if ( parquetType.getName().equals( typeName ) ) {
-          this.formatType = parquetType.ordinal();
+          this.formatType = parquetType.getId();
         }
       }
     }
