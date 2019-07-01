@@ -111,6 +111,10 @@ public class ParquetOutput extends BaseStep implements StepInterface {
     if ( AliasedFileObject.isAliasedFile( outputFileObject ) ) {
       outputFileName = ( (AliasedFileObject) outputFileObject ).getOriginalURIString();
     }
+    String pfx="s3n://s3n/";
+    if (outputFileName.startsWith(pfx)){
+      outputFileName = outputFileName.replaceFirst( pfx, "s3a:/" );
+    }
 
     data.output.setOutputFile( outputFileName, meta.overrideOutput );
     data.output.setFields( meta.getOutputFields() );
